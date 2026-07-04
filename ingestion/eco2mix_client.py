@@ -2,6 +2,7 @@ import base64
 import os
 from datetime import datetime, timedelta
 import requests
+import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -44,9 +45,43 @@ def get_consumption(token: str) -> dict:
     return response.json()
 
 
+def save_consumption(data: dict):
+    conn = psycopg2.connect(
+        host=os.getenv("POSTGRES_HOST"),
+        port=os.getenv("POSTGRES_PORT"),
+        dbname=os.getenv("POSTGRES_DB"),
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+    )
+    cur = conn.cursor()
+
+    rows_inserted = 0
+    for series in data["short_term"]:
+        period_type = series["type"]
+        for value in series["values"]:
+            cur.execute(
+                """
+                INSERT INTO raw.energy_observations
+                    (period_type, start_date, end_date, consumption_mw)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    period_type,
+                    value["start_date"],
+                    value["end_date"],
+                    value["value"],
+                ),
+            )
+            rows_inserted += 1
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    return rows_inserted
+
+
 if __name__ == "__main__":
     token = get_rte_token()
     data = get_consumption(token)
-    print(f"Nombre de séries : {len(data['short_term'])}")
-    print(f"Première série : type={data['short_term'][0]['type']}, "
-          f"{len(data['short_term'][0]['values'])} valeurs")
+    count = save_consumption(data)
+    print(f"{count} observations de consommation enregistrées dans PostgreSQL.")

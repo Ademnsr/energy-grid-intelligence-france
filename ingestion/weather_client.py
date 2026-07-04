@@ -1,4 +1,10 @@
+import os
 import requests
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def get_weather(latitude: float, longitude: float) -> dict:
     url = "https://api.open-meteo.com/v1/forecast"
@@ -12,7 +18,40 @@ def get_weather(latitude: float, longitude: float) -> dict:
     return response.json()
 
 
+def save_weather(data: dict, latitude: float, longitude: float):
+    conn = psycopg2.connect(
+        host=os.getenv("POSTGRES_HOST"),
+        port=os.getenv("POSTGRES_PORT"),
+        dbname=os.getenv("POSTGRES_DB"),
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+    )
+    cur = conn.cursor()
+
+    current = data["current"]
+    cur.execute(
+        """
+        INSERT INTO raw.weather_observations
+            (latitude, longitude, observed_at, temperature_2m, relative_humidity_2m, wind_speed_10m)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (
+            latitude,
+            longitude,
+            current["time"],
+            current["temperature_2m"],
+            current["relative_humidity_2m"],
+            current["wind_speed_10m"],
+        ),
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 if __name__ == "__main__":
-    #Test
-    data = get_weather(latitude=48.8566, longitude=2.3522)
-    print(data)
+    lat, lon = 48.8566, 2.3522
+    data = get_weather(lat, lon)
+    save_weather(data, lat, lon)
+    print("Observation météo enregistrée dans PostgreSQL.")
