@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_energy_observations
+    columns:
+      - name: id
+        tests:
+          - not_null
+          - unique
+      - name: start_date
+        tests:
+          - not_null
+      - name: consumption_mw
+        tests:
+          - not_null
+
+  - name: stg_weather_observations
+    columns:
+      - name: id
+        tests:
+          - not_null
+          - unique
+      - name: observed_at
+        tests:
+          - not_null
+      - name: temperature_2m
+        tests:
+          - not_null
