@@ -4,3 +4,6 @@ __pycache__/
 .env
 dbt/logs/
 dbt/target/
+logs/
+airflow/config/
+airflow/plugins/
