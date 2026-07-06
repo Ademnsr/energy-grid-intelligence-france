@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS raw.weather_observations (
     temperature_2m NUMERIC,
     relative_humidity_2m NUMERIC,
     wind_speed_10m NUMERIC,
-    inserted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    inserted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (latitude, longitude, observed_at)
 );
 
 CREATE TABLE IF NOT EXISTS raw.energy_observations (
@@ -17,5 +18,6 @@ CREATE TABLE IF NOT EXISTS raw.energy_observations (
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
     consumption_mw NUMERIC NOT NULL,
-    inserted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    inserted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (period_type, start_date, end_date)
 );

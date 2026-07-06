@@ -64,6 +64,10 @@ def save_consumption(data: dict):
                 INSERT INTO raw.energy_observations
                     (period_type, start_date, end_date, consumption_mw)
                 VALUES (%s, %s, %s, %s)
+                ON CONFLICT (period_type, start_date, end_date)
+                DO UPDATE SET
+                    consumption_mw = EXCLUDED.consumption_mw,
+                    inserted_at = now()
                 """,
                 (
                     period_type,

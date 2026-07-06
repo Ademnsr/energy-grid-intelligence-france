@@ -34,6 +34,12 @@ def save_weather(data: dict, latitude: float, longitude: float):
         INSERT INTO raw.weather_observations
             (latitude, longitude, observed_at, temperature_2m, relative_humidity_2m, wind_speed_10m)
         VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (latitude, longitude, observed_at)
+        DO UPDATE SET
+            temperature_2m = EXCLUDED.temperature_2m,
+            relative_humidity_2m = EXCLUDED.relative_humidity_2m,
+            wind_speed_10m = EXCLUDED.wind_speed_10m,
+            inserted_at = now()
         """,
         (
             latitude,
